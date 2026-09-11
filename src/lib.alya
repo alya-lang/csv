@@ -1,14 +1,115 @@
-# csv library
+# csv - RFC-4180 Compliant CSV & TSV Library for Alya
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
 import "./types.alya"
-import "./core/formatter.alya"
+import "./core/parser.alya"
+import "./core/writer.alya"
+import "./io/file.alya"
 
-# Public facade functions
-function hello(name = "World")
-    return core_format_greeting(name)
+# ═══════════════════════════════════════════════════════════════
+# Options Constructors
+# ═══════════════════════════════════════════════════════════════
+
+function options()
+    return options_new()
 end
 
-function new_config(name = "World", count = 1)
-    return make_config(name, count)
+function tsv_options()
+    return options_tsv()
+end
+
+function custom_options(delimiter)
+    return options_with_delimiter(delimiter)
+end
+
+# ═══════════════════════════════════════════════════════════════
+# Parsing API
+# ═══════════════════════════════════════════════════════════════
+
+# Parse CSV string into a 2D list of rows.
+function parse_csv(text, opts = null)
+    return parse(text, opts)
+end
+
+# Parse TSV string into a 2D list of rows.
+function parse_tsv(text, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return parse(text, options)
+end
+
+# Parse CSV string into a list of Map records using the first row as headers.
+function parse_csv_records(text, opts = null)
+    return parse_records(text, opts)
+end
+
+# Parse TSV string into a list of Map records using the first row as headers.
+function parse_tsv_records(text, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return parse_records(text, options)
+end
+
+# ═══════════════════════════════════════════════════════════════
+# Serialization API
+# ═══════════════════════════════════════════════════════════════
+
+# Serialize 2D list of rows to CSV string.
+function stringify_csv(rows, opts = null)
+    return stringify(rows, opts)
+end
+
+# Serialize 2D list of rows to TSV string.
+function stringify_tsv(rows, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return stringify(rows, options)
+end
+
+# Serialize list of Map records to CSV string with headers.
+function stringify_csv_records(records, headers = null, opts = null)
+    return stringify_records(records, headers, opts)
+end
+
+# Serialize list of Map records to TSV string with headers.
+function stringify_tsv_records(records, headers = null, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return stringify_records(records, headers, options)
+end
+
+# ═══════════════════════════════════════════════════════════════
+# File I/O API
+# ═══════════════════════════════════════════════════════════════
+
+function read_file_rows(path, opts = null)
+    return read_csv_file(path, opts)
+end
+
+function read_file_records(path, opts = null)
+    return read_records_file(path, opts)
+end
+
+function write_file_rows(path, rows, opts = null)
+    return write_csv_file(path, rows, opts)
+end
+
+function write_file_records(path, records, headers = null, opts = null)
+    return write_records_file(path, records, headers, opts)
 end

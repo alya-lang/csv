@@ -1,0 +1,26 @@
+# file.alya - CSV File I/O Operations
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
+import "../types.alya"
+import "../core/parser.alya"
+import "../core/writer.alya"
+
+function read_csv_file(path, opts = null)
+    let content = read_file(path)
+    return parse(content, opts)
+end
+
+function read_records_file(path, opts = null)
+    let content = read_file(path)
+    return parse_records(content, opts)
+end
+
+function write_csv_file(path, rows, opts = null)
+    let content = stringify(rows, opts)
+    return write_file(path, content)
+end
+
+function write_records_file(path, records, headers = null, opts = null)
+    let content = stringify_records(records, headers, opts)
+    return write_file(path, content)
+end

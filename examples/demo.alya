@@ -1,15 +1,57 @@
-# Example usage of csv
-import "../src/lib.alya" as pkg
+# Example usage of csv package
+import "std/fs"
+import "../src/lib.alya" as csv
 
 function main()
-    # Basic greeting
-    let msg = pkg::hello("Alya Developer")
-    say msg
+    say "=== Alya CSV / TSV Package Demo ==="
 
-    # Using configuration struct
-    let cfg = pkg::new_config("Modular Architecture", 5)
-    say "Target: " + cfg.name
-    say "Formatted: " + pkg::core_format_custom(cfg)
+    # 1. Parsing standard CSV with RFC-4180 features
+    let raw_data = "name,role,quote\nAlice,Engineer,\"Code, Test, Deploy\"\nBob,Lead,\"Keep it \"\"simple\"\"\"\nCharlie,Architect,Scalability"
+    say "\n1. Parsing raw CSV data:"
+    let rows = csv::parse_csv(raw_data)
+    let r = 0
+    while r < len(rows)
+        let row = rows[r]
+        say "  Row " + str(r) + ": " + str_from_ptr(row[0]) + " | " + str_from_ptr(row[1]) + " | " + str_from_ptr(row[2])
+        r += 1
+    end
+
+    # 2. Parsing into structured Map records
+    say "\n2. Parsing into Map records:"
+    let records = csv::parse_csv_records(raw_data)
+    let idx = 0
+    while idx < len(records)
+        let rec = records[idx]
+        say "  [Employee] " + str_from_ptr(rec["name"]) + " is " + str_from_ptr(rec["role"]) + " -> Quote: " + str_from_ptr(rec["quote"])
+        idx += 1
+    end
+
+    # 3. Serializing records to CSV string
+    say "\n3. Serializing records back to CSV:"
+    let new_rec1 = {"name": "Diana", "role": "DevOps", "quote": "Automate everything"}
+    let new_rec2 = {"name": "Evan", "role": "Security", "quote": "Zero trust, always"}
+    let outgoing_records = [new_rec1, new_rec2]
+    let headers = ["name", "role", "quote"]
+    let serialized = csv::stringify_csv_records(outgoing_records, headers)
+    say serialized
+
+    # 4. File I/O operations
+    let demo_file = "./target_demo.csv"
+    say "\n4. Writing records to file: " + demo_file
+    csv::write_file_records(demo_file, outgoing_records, headers)
+
+    say "   Reading records back from file:"
+    let read_records = csv::read_file_records(demo_file)
+    let k = 0
+    while k < len(read_records)
+        let rec = read_records[k]
+        say "   - " + str_from_ptr(rec["name"]) + " (" + str_from_ptr(rec["role"]) + ")"
+        k += 1
+    end
+
+    # Clean up demo file
+    remove_file(demo_file)
+    say "\nDemo finished successfully!"
 end
 
 main()

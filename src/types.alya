@@ -1,16 +1,38 @@
 # Types and data structures for csv
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
-struct CsvConfig
-    name
-    prefix
-    count
+struct CsvOptions
+    delimiter
+    quote_char
+    escape_char
+    trim
+    skip_empty_lines
+    comment_char
+    crlf
+    always_quote
 end
 
-function make_config(name = "World", count = 1)
-    return CsvConfig {
-        name: name,
-        prefix: "Hello",
-        count: count
+function options_new()
+    return CsvOptions {
+        delimiter: ",",
+        quote_char: "\"",
+        escape_char: "\"",
+        trim: 0,
+        skip_empty_lines: 1,
+        comment_char: "",
+        crlf: 0,
+        always_quote: 0
     }
+end
+
+function options_tsv()
+    let opts = options_new()
+    opts.delimiter = "\t"
+    return opts
+end
+
+function options_with_delimiter(delim)
+    let opts = options_new()
+    opts.delimiter = delim
+    return opts
 end

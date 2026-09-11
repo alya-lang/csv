@@ -1,0 +1,129 @@
+# writer.alya - RFC-4180 Compliant CSV / TSV Serializer for Alya
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
+import "../types.alya"
+
+# Escapes quotes according to RFC 4180 by doubling them (" -> "")
+function _csv_escape_quotes(s, quote_char)
+    let res = ""
+    let slen = len(s)
+    let i = 0
+    while i < slen
+        let ch = char_at(s, i)
+        if ch == quote_char
+            res += quote_char + quote_char
+        else
+            res += ch
+        end
+        i += 1
+    end
+    return res
+end
+
+# Formats a single field applying quotes if required or requested.
+function format_field(val, opts)
+    let s = str_from_ptr(val)
+    let delim = opts.delimiter
+    let quote = opts.quote_char
+    let always = opts.always_quote
+
+    let needs_quotes = always
+    if needs_quotes == 0
+        if contains(s, delim) or contains(s, quote) or contains(s, "\n") or contains(s, "\r")
+            needs_quotes = 1
+        end
+    end
+
+    if needs_quotes == 1
+        let escaped = _csv_escape_quotes(s, quote)
+        return quote + escaped + quote
+    end
+
+    return s
+end
+
+# Serializes a 2D array of rows into a CSV formatted string.
+function stringify(rows, opts = null)
+    let options = opts
+    if options == null
+        options = options_new()
+    end
+
+    let delim = options.delimiter
+    let line_ending = "\n"
+    if options.crlf == 1
+        line_ending = "\r\n"
+    end
+
+    let out = ""
+    let num_rows = len(rows)
+    let r = 0
+
+    while r < num_rows
+        let row = rows[r]
+        let num_cols = len(row)
+        let line = ""
+        let c = 0
+        while c < num_cols
+            let cell = format_field(row[c], options)
+            if c > 0
+                line += delim + cell
+            else
+                line = cell
+            end
+            c += 1
+        end
+
+        if r > 0
+            out += line_ending + line
+        else
+            out = line
+        end
+        r += 1
+    end
+
+    return out
+end
+
+# Serializes an array of Map records into CSV format with headers.
+function stringify_records(records, headers = null, opts = null)
+    let options = opts
+    if options == null
+        options = options_new()
+    end
+
+    let actual_headers = headers
+    let num_records = len(records)
+
+    if actual_headers == null
+        if num_records > 0
+            actual_headers = keys(records[0])
+        else
+            return ""
+        end
+    end
+
+    let rows = []
+    rows.push(actual_headers)
+    let h_count = len(actual_headers)
+
+    let r = 0
+    while r < num_records
+        let rec = records[r]
+        let row = []
+        let c = 0
+        while c < h_count
+            let h = str_from_ptr(actual_headers[c])
+            let val = ""
+            if has(rec, h) == 1
+                val = str_from_ptr(get(rec, h))
+            end
+            row.push(val)
+            c += 1
+        end
+        rows.push(row)
+        r += 1
+    end
+
+    return stringify(rows, options)
+end

@@ -1,0 +1,188 @@
+# parser.alya - RFC-4180 Compliant CSV / TSV Parser for Alya
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
+import "../types.alya"
+
+# Internal trim helper
+function _csv_trim(s)
+    let slen = len(s)
+    if slen == 0
+        return ""
+    end
+    let start = 0
+    while start < slen
+        let ch = char_at(s, start)
+        if ch != " " and ch != "\t" and ch != "\r" and ch != "\n"
+            break
+        end
+        start += 1
+    end
+    if start == slen
+        return ""
+    end
+    let end_pos = slen - 1
+    while end_pos >= start
+        let ch = char_at(s, end_pos)
+        if ch != " " and ch != "\t" and ch != "\r" and ch != "\n"
+            break
+        end
+        end_pos -= 1
+    end
+    return substring(s, start, end_pos - start + 1)
+end
+
+# Parses CSV text into a 2D array of string fields (rows).
+function parse(text, opts = null)
+    let options = opts
+    if options == null
+        options = options_new()
+    end
+
+    let delim = options.delimiter
+    let quote = options.quote_char
+    let escape = options.escape_char
+    let should_trim = options.trim
+    let skip_empty = options.skip_empty_lines
+    let comment = options.comment_char
+
+    let s = str_from_ptr(text)
+    let slen = len(s)
+    let rows = []
+    let current_row = []
+    let current_field = ""
+    let in_quotes = 0
+    let field_was_quoted = 0
+    let at_line_start = 1
+    let in_comment = 0
+    let i = 0
+
+    while i < slen
+        let ch = char_at(s, i)
+
+        # Handle comment lines if configured
+        if at_line_start == 1 and len(comment) > 0 and ch == comment
+            in_comment = 1
+        end
+
+        if in_comment == 1
+            if ch == "\n"
+                in_comment = 0
+                at_line_start = 1
+            end
+            i += 1
+            continue
+        end
+
+        if in_quotes == 1
+            if ch == quote
+                # Check for escaped quote (e.g. "" in RFC 4180)
+                if i + 1 < slen and char_at(s, i + 1) == escape
+                    current_field += quote
+                    i += 1
+                else
+                    in_quotes = 0
+                end
+            else
+                current_field += ch
+            end
+        else
+            if ch == quote and len(current_field) == 0
+                in_quotes = 1
+                field_was_quoted = 1
+            elif ch == delim
+                if should_trim == 1 and field_was_quoted == 0
+                    current_field = _csv_trim(current_field)
+                end
+                current_row.push(current_field)
+                current_field = ""
+                field_was_quoted = 0
+                at_line_start = 0
+            elif ch == "\r"
+                if i + 1 < slen and char_at(s, i + 1) == "\n"
+                    i += 1
+                end
+                if should_trim == 1 and field_was_quoted == 0
+                    current_field = _csv_trim(current_field)
+                end
+                current_row.push(current_field)
+                current_field = ""
+                field_was_quoted = 0
+
+                # Determine if row should be pushed
+                let row_len = len(current_row)
+                if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
+                    rows.push(current_row)
+                end
+                current_row = []
+                at_line_start = 1
+            elif ch == "\n"
+                if should_trim == 1 and field_was_quoted == 0
+                    current_field = _csv_trim(current_field)
+                end
+                current_row.push(current_field)
+                current_field = ""
+                field_was_quoted = 0
+
+                let row_len = len(current_row)
+                if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
+                    rows.push(current_row)
+                end
+                current_row = []
+                at_line_start = 1
+            else
+                current_field += ch
+                at_line_start = 0
+            end
+        end
+
+        i += 1
+    end
+
+    # Flush last remaining field and row
+    if len(current_field) > 0 or len(current_row) > 0 or field_was_quoted == 1
+        if should_trim == 1 and field_was_quoted == 0
+            current_field = _csv_trim(current_field)
+        end
+        current_row.push(current_field)
+        let row_len = len(current_row)
+        if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
+            rows.push(current_row)
+        end
+    end
+
+    return rows
+end
+
+# Parses CSV text into an array of Map records based on header column names.
+function parse_records(text, opts = null)
+    let rows = parse(text, opts)
+    let num_rows = len(rows)
+    if num_rows == 0
+        return []
+    end
+
+    let headers = rows[0]
+    let h_count = len(headers)
+    let records = []
+    let r = 1
+
+    while r < num_rows
+        let row = rows[r]
+        let row_len = len(row)
+        let record = {}
+        let c = 0
+        while c < h_count
+            let h_name = str_from_ptr(headers[c])
+            let val = ""
+            if c < row_len
+                val = str_from_ptr(row[c])
+            end
+            set(record, h_name, val)
+            c += 1
+        end
+        records.push(record)
+        r += 1
+    end
+
+    return records
+end

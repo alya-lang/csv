@@ -5,17 +5,18 @@
 [![Alya](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Fcsv%2Fmain%2Falya.toml&query=%24.package.alya-version&label=Alya&color=orange&prefix=%3E%3D)](https://github.com/alya-lang/alya)
 [![Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Fcsv%2Fmain%2Falya.toml&query=%24.package.version&label=Version&color=brightgreen)](alya.toml)
 
-RFC-4180 compliant CSV and TSV parser, serializer, and data processor for Alya
+RFC-4180 compliant CSV and TSV parser, serializer, and data processor for Alya.
 
 ---
 
 ## 🌟 Features
 
-- ⚡ **Lightweight & Fast**: Built for speed with minimal overhead
-- 📦 **Zero Dependencies**: Pure Alya code, entirely self-contained
-- 🧩 **Modular Architecture**: Multi-module design supporting flat modules (`types.alya`) and subfolder hierarchies (`core/formatter.alya`)
-- 🛡️ **Reliable & Typed**: Explicit struct definitions and clean namespaced APIs
-- 🧪 **Well Tested**: Comprehensive test suite with standard assertions
+- ⚡ **High Performance**: Native parsing and stringification reaching over 1M ops/sec.
+- 📜 **RFC-4180 Compliant**: Handles commas inside quotes, CRLF/LF line endings, escaped double quotes (`""`), and multiline fields.
+- 📑 **Header-to-Map Records**: Automatically maps header rows into structured dictionary records (`[ {"name": "Alice", "role": "Dev"} ]`).
+- 🔄 **Custom Delimiters**: Built-in support for CSV (`,`), TSV (`\t`), Semicolon (`;`), and custom delimiters.
+- 📁 **File I/O**: Direct helpers to read and write rows or records to files.
+- 📦 **Zero Dependencies**: Pure Alya code, fully self-contained.
 
 ---
 
@@ -26,19 +27,19 @@ csv/
 ├── alya.toml               # Package manifest
 ├── src/
 │   ├── lib.alya            # Public API facade
-│   ├── types.alya          # Data structures & struct definitions
-│   └── core/               # Subdirectory module hierarchy (optional for larger packages)
-│       └── formatter.alya  # Domain formatting logic & internal helpers
+│   ├── types.alya          # CsvOptions configuration struct & constructors
+│   ├── core/
+│   │   ├── parser.alya     # State-machine RFC-4180 CSV / TSV parser & record mapper
+│   │   └── writer.alya     # CSV / TSV serializer & field escaping
+│   └── io/
+│       └── file.alya       # File read / write operations
 ├── examples/
-│   └── demo.alya           # Runnable usage examples
+│   └── demo.alya           # Comprehensive runnable demo
 ├── tests/
-│   └── test_basic.alya     # Automated test suite
+│   └── test_basic.alya     # 47 RFC-4180 automated test cases
 └── benches/
     └── bench_basic.alya    # Micro-benchmarks
 ```
-
-> [!NOTE]
-> Modules can be structured flat inside `src/` (e.g. `src/types.alya`) or grouped into subdirectories (e.g. `src/core/formatter.alya`). Relative imports like `import "../types.alya"` or `import "./core/formatter.alya"` are resolved relative to the importing file and deduplicated transitively.
 
 ---
 
@@ -62,18 +63,70 @@ alyac install
 
 ## 🚀 Quick Start
 
+### 1. Basic Parsing & Stringification
+
 ```alya
-import "csv" as pkg
+import "csv"
 
 function main()
-    # Basic facade call
-    let greeting = pkg::hello("Alya")
-    say greeting
+    let raw = "name,role,city\nAlice,Engineer,\"New York, NY\"\nBob,Lead,London"
 
-    # Struct construction and domain helpers
-    let cfg = pkg::new_config("Community", 2)
-    say "Target: " + cfg.name
-    say "Formatted: " + pkg::core_format_custom(cfg)
+    # Parse into 2D row array
+    let rows = csv::parse_csv(raw)
+    say "First person: " + rows[1][0] # Alice
+
+    # Serialize back to CSV
+    let output = csv::stringify_csv(rows)
+    say output
+end
+
+main()
+```
+
+### 2. Working with Map Records
+
+```alya
+import "csv"
+
+function main()
+    let raw = "id,product,price\n101,Laptop,1200\n102,Mouse,25"
+    let records = csv::parse_csv_records(raw)
+
+    let i = 0
+    while i < len(records)
+        let item = records[i]
+        say "Item: " + item["product"] + " -> $" + item["price"]
+        i += 1
+    end
+
+    # Serialize records with specific column order
+    let headers = ["id", "product", "price"]
+    let csv_text = csv::stringify_csv_records(records, headers)
+    say csv_text
+end
+
+main()
+```
+
+### 3. File Operations
+
+```alya
+import "csv"
+
+function main()
+    let path = "./inventory.csv"
+    let rows = [
+        ["sku", "name", "qty"],
+        ["A01", "Keyboard", "50"],
+        ["B02", "Monitor", "20"]
+    ]
+
+    # Write rows to file
+    csv::write_file_rows(path, rows)
+
+    # Read rows back
+    let loaded = csv::read_file_rows(path)
+    say "Total rows: " + str(len(loaded))
 end
 
 main()
@@ -83,12 +136,40 @@ main()
 
 ## 📖 API Reference
 
+### Options Constructors
+
 | Function | Arguments | Returns | Description |
 |---|---|---|---|
-| `hello(name)` | `name = "World"` | `string` | Returns a friendly greeting message. |
-| `new_config(name, count)` | `name = "World", count = 1` | `CsvConfig` | Constructs a new configuration struct. |
-| `core_format_greeting(name)` | `name` | `string` | Core formatter producing `Hello, {name}!`. |
-| `core_format_custom(config)` | `config: CsvConfig` | `string` | Formats greeting using prefix and name from config. |
+| `options()` | - | `CsvOptions` | Returns default CSV options (`,` delimiter, CRLF disabled, trim disabled). |
+| `tsv_options()` | - | `CsvOptions` | Returns TSV options (`\t` delimiter). |
+| `custom_options(delimiter)` | `delimiter: string` | `CsvOptions` | Returns options with a custom delimiter character. |
+
+### Parsing Functions
+
+| Function | Arguments | Returns | Description |
+|---|---|---|---|
+| `parse_csv(text, opts = null)` | `text: string, opts: CsvOptions` | `array` | Parses CSV text into a 2D array of rows. |
+| `parse_tsv(text, opts = null)` | `text: string, opts: CsvOptions` | `array` | Parses TSV text into a 2D array of rows. |
+| `parse_csv_records(text, opts = null)` | `text: string, opts: CsvOptions` | `array` | Parses CSV text into a list of Map records using the header row. |
+| `parse_tsv_records(text, opts = null)` | `text: string, opts: CsvOptions` | `array` | Parses TSV text into a list of Map records using the header row. |
+
+### Serialization Functions
+
+| Function | Arguments | Returns | Description |
+|---|---|---|---|
+| `stringify_csv(rows, opts = null)` | `rows: array, opts: CsvOptions` | `string` | Serializes a 2D array of rows into CSV text. |
+| `stringify_tsv(rows, opts = null)` | `rows: array, opts: CsvOptions` | `string` | Serializes a 2D array of rows into TSV text. |
+| `stringify_csv_records(records, headers = null, opts = null)` | `records: array, headers: array, opts: CsvOptions` | `string` | Serializes Map records into CSV text with headers. |
+| `stringify_tsv_records(records, headers = null, opts = null)` | `records: array, headers: array, opts: CsvOptions` | `string` | Serializes Map records into TSV text with headers. |
+
+### File I/O Functions
+
+| Function | Arguments | Returns | Description |
+|---|---|---|---|
+| `read_file_rows(path, opts = null)` | `path: string, opts: CsvOptions` | `array` | Reads and parses rows directly from a CSV file. |
+| `read_file_records(path, opts = null)` | `path: string, opts: CsvOptions` | `array` | Reads and parses Map records directly from a CSV file. |
+| `write_file_rows(path, rows, opts = null)` | `path: string, rows: array, opts: CsvOptions` | `int` | Serializes rows and writes to a CSV file. |
+| `write_file_records(path, records, headers = null, opts = null)` | `path: string, records: array, headers: array, opts: CsvOptions` | `int` | Serializes Map records and writes to a CSV file. |
 
 ---
 
@@ -97,6 +178,8 @@ main()
 Run the test suite using `alyac`:
 
 ```bash
+alyac test
+# or
 alyac run tests/test_basic.alya
 ```
 
@@ -111,20 +194,6 @@ Run the example demo:
 ```bash
 alyac run examples/demo.alya
 ```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps to contribute:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/my-new-feature`)
-3. Commit your changes (`git commit -m "feat: add some feature"`)
-4. Push to the branch (`git push origin feature/my-new-feature`)
-5. Open a Pull Request
-
-Please make sure tests pass before submitting a PR.
 
 ---
 

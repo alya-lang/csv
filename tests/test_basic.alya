@@ -1,28 +1,170 @@
-# Test suite for csv
+# test_basic.alya - Comprehensive RFC-4180 Test Suite for csv package
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
 import "std/test"
-import "../src/lib.alya" as pkg
+import "std/fs"
+import "../src/lib.alya" as csv
 
 function main()
-    test_suite("csv Test Suite")
+    test_suite("CSV & TSV RFC-4180 Test Suite")
     let r = runner_new()
 
-    # 1. Basic facade function
-    let res = pkg::hello("Alya")
-    runner_assert_str_eq(r, res, "Hello, Alya!", "pkg::hello returns formatted greeting")
+    # ═══════════════════════════════════════════════════════════════
+    # 1. Basic Parsing
+    # ═══════════════════════════════════════════════════════════════
 
-    # 2. Default parameter
-    let default_res = pkg::hello()
-    runner_assert_str_eq(r, default_res, "Hello, World!", "pkg::hello() uses default name")
+    let simple_csv = "name,age,city\nAlice,30,London\nBob,25,Paris"
+    let rows = csv::parse_csv(simple_csv)
+    runner_assert_eq(r, len(rows), 3, "Parsed exactly 3 rows")
+    runner_assert_str_eq(r, rows[0][0], "name", "Header 0 is 'name'")
+    runner_assert_str_eq(r, rows[0][1], "age", "Header 1 is 'age'")
+    runner_assert_str_eq(r, rows[0][2], "city", "Header 2 is 'city'")
+    runner_assert_str_eq(r, rows[1][0], "Alice", "Row 1 col 0 is 'Alice'")
+    runner_assert_str_eq(r, rows[1][1], "30", "Row 1 col 1 is '30'")
+    runner_assert_str_eq(r, rows[2][2], "Paris", "Row 2 col 2 is 'Paris'")
 
-    # 3. Modular types & config constructor
-    let cfg = pkg::new_config("Community", 3)
-    runner_assert_str_eq(r, cfg.name, "Community", "pkg::new_config sets name correctly")
-    runner_assert_str_eq(r, cfg.prefix, "Hello", "pkg::new_config sets default prefix")
-    runner_assert_eq(r, cfg.count, 3, "pkg::new_config sets count correctly")
+    # ═══════════════════════════════════════════════════════════════
+    # 2. RFC 4180: CRLF Line Endings
+    # ═══════════════════════════════════════════════════════════════
 
-    # 4. Core custom formatter using struct
-    let custom_res = pkg::core_format_custom(cfg)
-    runner_assert_str_eq(r, custom_res, "Hello, Community!", "pkg::core_format_custom formats using config")
+    let crlf_csv = "id,status\r\n1,active\r\n2,pending\r\n"
+    let crlf_rows = csv::parse_csv(crlf_csv)
+    runner_assert_eq(r, len(crlf_rows), 3, "Handles CRLF line endings correctly")
+    runner_assert_str_eq(r, crlf_rows[1][1], "active", "CRLF field parsed cleanly")
+    runner_assert_str_eq(r, crlf_rows[2][1], "pending", "CRLF field 2 parsed cleanly")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 3. RFC 4180: Quoted Fields with Delimiters
+    # ═══════════════════════════════════════════════════════════════
+
+    let quoted_delim_csv = "\"Smith, John\",30,\"New York, NY\""
+    let qd_rows = csv::parse_csv(quoted_delim_csv)
+    runner_assert_eq(r, len(qd_rows), 1, "Parsed 1 row with quoted commas")
+    runner_assert_str_eq(r, qd_rows[0][0], "Smith, John", "Quoted comma preserved inside field")
+    runner_assert_str_eq(r, qd_rows[0][1], "30", "Unquoted field parsed correctly")
+    runner_assert_str_eq(r, qd_rows[0][2], "New York, NY", "Second quoted comma preserved")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 4. RFC 4180: Multiline Fields inside Quotes
+    # ═══════════════════════════════════════════════════════════════
+
+    let multiline_csv = "title,description\nBook 1,\"First line\nSecond line\nThird line\"\nBook 2,Short"
+    let ml_rows = csv::parse_csv(multiline_csv)
+    runner_assert_eq(r, len(ml_rows), 3, "Multiline quoted field does not split row prematurely")
+    runner_assert_str_eq(r, ml_rows[1][0], "Book 1", "Multiline row header title")
+    runner_assert_str_eq(r, ml_rows[1][1], "First line\nSecond line\nThird line", "Embedded newlines preserved")
+    runner_assert_str_eq(r, ml_rows[2][0], "Book 2", "Subsequent row parsed after multiline")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 5. RFC 4180: Escaped Quotes ("")
+    # ═══════════════════════════════════════════════════════════════
+
+    let escaped_quote_csv = "\"He said \"\"Hello\"\" to Alice\",200"
+    let eq_rows = csv::parse_csv(escaped_quote_csv)
+    runner_assert_eq(r, len(eq_rows), 1, "Row with escaped quotes parsed")
+    runner_assert_str_eq(r, eq_rows[0][0], "He said \"Hello\" to Alice", "Double quote properly unescaped to single quote")
+    runner_assert_str_eq(r, eq_rows[0][1], "200", "Col 1 is 200")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 6. TSV (Tab Separated Values) Parsing
+    # ═══════════════════════════════════════════════════════════════
+
+    let tsv_text = "code\tname\tprice\nALYA\tAlya Language\t0.00"
+    let tsv_rows = csv::parse_tsv(tsv_text)
+    runner_assert_eq(r, len(tsv_rows), 2, "Parsed 2 TSV rows")
+    runner_assert_str_eq(r, tsv_rows[0][1], "name", "TSV col 1 is 'name'")
+    runner_assert_str_eq(r, tsv_rows[1][0], "ALYA", "TSV row 1 col 0 is 'ALYA'")
+    runner_assert_str_eq(r, tsv_rows[1][1], "Alya Language", "TSV row 1 col 1 is 'Alya Language'")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 7. Custom Delimiters (Semicolon & Pipe)
+    # ═══════════════════════════════════════════════════════════════
+
+    let semi_opts = csv::custom_options(";")
+    let semi_csv = "first;second;third\n10;20;30"
+    let semi_rows = csv::parse_csv(semi_csv, semi_opts)
+    runner_assert_eq(r, len(semi_rows), 2, "Semicolon delimiter parsed")
+    runner_assert_str_eq(r, semi_rows[1][1], "20", "Semicolon col 1 value is 20")
+
+    let pipe_opts = csv::custom_options("|")
+    let pipe_csv = "alpha|beta|gamma\nX|Y|Z"
+    let pipe_rows = csv::parse_csv(pipe_csv, pipe_opts)
+    runner_assert_str_eq(r, pipe_rows[1][2], "Z", "Pipe delimiter col 2 is 'Z'")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 8. Comment Lines and Whitespace Trimming
+    # ═══════════════════════════════════════════════════════════════
+
+    let comment_opts = csv::options()
+    comment_opts.comment_char = "#"
+    comment_opts.trim = 1
+    let comment_csv = "# This is a comment\n  name  ,  age  \n# Another comment\n  Bob  ,  40  "
+    let c_rows = csv::parse_csv(comment_csv, comment_opts)
+    runner_assert_eq(r, len(c_rows), 2, "Comments skipped properly")
+    runner_assert_str_eq(r, c_rows[0][0], "name", "Trimmed field 'name'")
+    runner_assert_str_eq(r, c_rows[0][1], "age", "Trimmed field 'age'")
+    runner_assert_str_eq(r, c_rows[1][0], "Bob", "Trimmed field 'Bob'")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 9. Header to Record (Map) Parsing
+    # ═══════════════════════════════════════════════════════════════
+
+    let records_csv = "user,role,active\nalice,admin,true\nbob,editor,false"
+    let recs = csv::parse_csv_records(records_csv)
+    runner_assert_eq(r, len(recs), 2, "Parsed 2 Map records")
+    runner_assert_str_eq(r, recs[0]["user"], "alice", "Record 0 user is alice")
+    runner_assert_str_eq(r, recs[0]["role"], "admin", "Record 0 role is admin")
+    runner_assert_str_eq(r, recs[1]["user"], "bob", "Record 1 user is bob")
+    runner_assert_str_eq(r, recs[1]["active"], "false", "Record 1 active is false")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 10. Serialization (Stringify)
+    # ═══════════════════════════════════════════════════════════════
+
+    let data_to_str = [
+        ["col1", "col2", "col3"],
+        ["simple", "has,comma", "has \"quote\""],
+        ["has\nnewline", "normal", "end"]
+    ]
+    let serialized = csv::stringify_csv(data_to_str)
+    let re_parsed = csv::parse_csv(serialized)
+    runner_assert_eq(r, len(re_parsed), 3, "Roundtrip 2D array row count matches")
+    runner_assert_str_eq(r, re_parsed[1][1], "has,comma", "Roundtrip preserved comma")
+    runner_assert_str_eq(r, re_parsed[1][2], "has \"quote\"", "Roundtrip preserved quote")
+    runner_assert_str_eq(r, re_parsed[2][0], "has\nnewline", "Roundtrip preserved newline")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 11. Record Serialization (stringify_records)
+    # ═══════════════════════════════════════════════════════════════
+
+    let rec1 = {"id": "1", "name": "Item A", "tag": "sale"}
+    let rec2 = {"id": "2", "name": "Item B", "tag": "clearance"}
+    let records_to_str = [rec1, rec2]
+    let headers_order = ["id", "name", "tag"]
+    let rec_csv = csv::stringify_csv_records(records_to_str, headers_order)
+    let rec_parsed = csv::parse_csv_records(rec_csv)
+    runner_assert_eq(r, len(rec_parsed), 2, "Roundtrip records count matches")
+    runner_assert_str_eq(r, rec_parsed[0]["name"], "Item A", "Record name Item A roundtripped")
+    runner_assert_str_eq(r, rec_parsed[1]["tag"], "clearance", "Record tag clearance roundtripped")
+
+    # ═══════════════════════════════════════════════════════════════
+    # 12. File Operations
+    # ═══════════════════════════════════════════════════════════════
+
+    let tmp_path = "./target_test_output.csv"
+    let file_data = [
+        ["city", "country"],
+        ["Tokyo", "Japan"],
+        ["Berlin", "Germany"]
+    ]
+    csv::write_file_rows(tmp_path, file_data)
+    let read_back = csv::read_file_rows(tmp_path)
+    runner_assert_eq(r, len(read_back), 3, "File read matches written row count")
+    runner_assert_str_eq(r, read_back[1][0], "Tokyo", "File read col 0 matches")
+    runner_assert_str_eq(r, read_back[2][1], "Germany", "File read col 1 matches")
+
+    # Clean up test file
+    remove_file(tmp_path)
 
     let failed = runner_summary(r)
     if failed > 0
