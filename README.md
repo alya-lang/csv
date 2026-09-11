@@ -16,7 +16,6 @@ RFC-4180 compliant CSV and TSV parser, serializer, and data processor for Alya.
 - 📑 **Header-to-Map Records**: Automatically maps header rows into structured dictionary records (`[ {"name": "Alice", "role": "Dev"} ]`).
 - 🔄 **Custom Delimiters**: Built-in support for CSV (`,`), TSV (`\t`), Semicolon (`;`), and custom delimiters.
 - 📁 **File I/O**: Direct helpers to read and write rows or records to files.
-- 📦 **Zero Dependencies**: Pure Alya code, fully self-contained.
 
 ---
 
@@ -194,6 +193,23 @@ Run the example demo:
 ```bash
 alyac run examples/demo.alya
 ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository and clone it locally
+2. Install dependencies:
+   ```bash
+   alyac install
+   ```
+3. Create your feature branch (`git checkout -b feature/my-feature`)
+4. Verify tests and formatting before opening a PR:
+   ```bash
+   alyac test
+   alyac fmt . --check
+   ```
+5. Commit your changes (`git commit -m "feat: add feature"`) and open a Pull Request
 
 ---
 
