@@ -113,3 +113,103 @@ end
 function write_file_records(path, records, headers = null, opts = null)
     return write_records_file(path, records, headers, opts)
 end
+
+# ═══════════════════════════════════════════════════════════════
+# Backward-Compatibility Aliases (Legacy stdlib/csv)
+# ═══════════════════════════════════════════════════════════════
+
+function csv_parse(text, opts = null)
+    return parse_csv(text, opts)
+end
+
+function csv_parse_tsv(text, opts = null)
+    return parse_tsv(text, opts)
+end
+
+function tsv_parse(text, opts = null)
+    return parse_tsv(text, opts)
+end
+
+function csv_parse_records(text, opts = null)
+    return parse_csv_records(text, opts)
+end
+
+function tsv_parse_records(text, opts = null)
+    return parse_tsv_records(text, opts)
+end
+
+function csv_stringify(rows, opts = null)
+    return stringify_csv(rows, opts)
+end
+
+function csv_stringify_tsv(rows, opts = null)
+    return stringify_tsv(rows, opts)
+end
+
+function tsv_stringify(rows, opts = null)
+    return stringify_tsv(rows, opts)
+end
+
+function csv_stringify_records(headers, records, opts = null)
+    return stringify_csv_records(records, headers, opts)
+end
+
+function tsv_stringify_records(headers, records, opts = null)
+    return stringify_tsv_records(records, headers, opts)
+end
+
+function csv_read_file(path, opts = null)
+    return read_file_rows(path, opts)
+end
+
+function tsv_read_file(path, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return read_file_rows(path, options)
+end
+
+function csv_read_records(path, opts = null)
+    return read_file_records(path, opts)
+end
+
+function tsv_read_records(path, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return read_file_records(path, options)
+end
+
+function csv_write_file(path, rows, opts = null)
+    return write_file_rows(path, rows, opts)
+end
+
+function tsv_write_file(path, rows, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return write_file_rows(path, rows, options)
+end
+
+function csv_write_records(path, headers, records, opts = null)
+    return write_file_records(path, records, headers, opts)
+end
+
+function tsv_write_records(path, headers, records, opts = null)
+    let options = opts
+    if options == null
+        options = options_tsv()
+    else
+        options.delimiter = "\t"
+    end
+    return write_file_records(path, records, headers, options)
+end
