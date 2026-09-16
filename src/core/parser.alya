@@ -34,7 +34,7 @@ end
 # Parses CSV text into a 2D array of string fields (rows).
 function parse(text, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_new()
     end
 

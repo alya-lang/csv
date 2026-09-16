@@ -45,7 +45,7 @@ end
 # Serializes a 2D array of rows into a CSV formatted string.
 function stringify(rows, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_new()
     end
 
@@ -88,14 +88,14 @@ end
 # Serializes an array of Map records into CSV format with headers.
 function stringify_records(records, headers = null, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_new()
     end
 
     let actual_headers = headers
     let num_records = len(records)
 
-    if actual_headers == null
+    if actual_headers is null
         if num_records > 0
             actual_headers = keys(records[0])
         else

@@ -10,15 +10,15 @@ import "./io/file.alya"
 # Options Constructors
 # ═══════════════════════════════════════════════════════════════
 
-function options()
+pub function options()
     return options_new()
 end
 
-function tsv_options()
+pub function tsv_options()
     return options_tsv()
 end
 
-function custom_options(delimiter)
+pub function custom_options(delimiter)
     return options_with_delimiter(delimiter)
 end
 
@@ -27,14 +27,14 @@ end
 # ═══════════════════════════════════════════════════════════════
 
 # Parse CSV string into a 2D list of rows.
-function parse_csv(text, opts = null)
+pub function parse_csv(text, opts = null)
     return parse(text, opts)
 end
 
 # Parse TSV string into a 2D list of rows.
-function parse_tsv(text, opts = null)
+pub function parse_tsv(text, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_tsv()
     else
         options.delimiter = "\t"
@@ -43,14 +43,14 @@ function parse_tsv(text, opts = null)
 end
 
 # Parse CSV string into a list of Map records using the first row as headers.
-function parse_csv_records(text, opts = null)
+pub function parse_csv_records(text, opts = null)
     return parse_records(text, opts)
 end
 
 # Parse TSV string into a list of Map records using the first row as headers.
-function parse_tsv_records(text, opts = null)
+pub function parse_tsv_records(text, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_tsv()
     else
         options.delimiter = "\t"
@@ -63,14 +63,14 @@ end
 # ═══════════════════════════════════════════════════════════════
 
 # Serialize 2D list of rows to CSV string.
-function stringify_csv(rows, opts = null)
+pub function stringify_csv(rows, opts = null)
     return stringify(rows, opts)
 end
 
 # Serialize 2D list of rows to TSV string.
-function stringify_tsv(rows, opts = null)
+pub function stringify_tsv(rows, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_tsv()
     else
         options.delimiter = "\t"
@@ -79,14 +79,14 @@ function stringify_tsv(rows, opts = null)
 end
 
 # Serialize list of Map records to CSV string with headers.
-function stringify_csv_records(records, headers = null, opts = null)
+pub function stringify_csv_records(records, headers = null, opts = null)
     return stringify_records(records, headers, opts)
 end
 
 # Serialize list of Map records to TSV string with headers.
-function stringify_tsv_records(records, headers = null, opts = null)
+pub function stringify_tsv_records(records, headers = null, opts = null)
     let options = opts
-    if options == null
+    if options is null
         options = options_tsv()
     else
         options.delimiter = "\t"
@@ -98,18 +98,18 @@ end
 # File I/O API
 # ═══════════════════════════════════════════════════════════════
 
-function read_file_rows(path, opts = null)
+pub function read_file_rows(path, opts = null)
     return read_csv_file(path, opts)
 end
 
-function read_file_records(path, opts = null)
+pub function read_file_records(path, opts = null)
     return read_records_file(path, opts)
 end
 
-function write_file_rows(path, rows, opts = null)
+pub function write_file_rows(path, rows, opts = null)
     return write_csv_file(path, rows, opts)
 end
 
-function write_file_records(path, records, headers = null, opts = null)
+pub function write_file_records(path, records, headers = null, opts = null)
     return write_records_file(path, records, headers, opts)
 end

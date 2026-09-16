@@ -1,7 +1,7 @@
 # Types and data structures for csv
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
-struct CsvOptions
+pub struct CsvOptions
     delimiter
     quote_char
     escape_char
@@ -12,7 +12,7 @@ struct CsvOptions
     always_quote
 end
 
-function options_new()
+pub function options_new()
     return CsvOptions {
         delimiter: ",",
         quote_char: "\"",
@@ -25,13 +25,13 @@ function options_new()
     }
 end
 
-function options_tsv()
+pub function options_tsv()
     let opts = options_new()
     opts.delimiter = "\t"
     return opts
 end
 
-function options_with_delimiter(delim)
+pub function options_with_delimiter(delim)
     let opts = options_new()
     opts.delimiter = delim
     return opts
