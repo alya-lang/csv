@@ -1,6 +1,6 @@
 [package]
 name = "csv"
-version = "0.5.0"
+version = "0.1.0"
 alya-version = "0.0.18"
 entry = "src/lib.alya"
 description = "RFC-4180 compliant CSV and TSV parser, serializer, and data processor for Alya"
