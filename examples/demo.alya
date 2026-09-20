@@ -1,5 +1,6 @@
 # Example usage of csv package
-import "std/fs"
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
 import "../src/lib.alya" as csv
 
 function main()
@@ -26,7 +27,7 @@ function main()
         idx += 1
     end
 
-    # 3. Serializing records to CSV string
+    # 3. Serializing records to CSV string with enums
     say "\n3. Serializing records back to CSV:"
     let new_rec1 = {"name": "Diana", "role": "DevOps", "quote": "Automate everything"}
     let new_rec2 = {"name": "Evan", "role": "Security", "quote": "Zero trust, always"}
@@ -35,9 +36,16 @@ function main()
     let serialized = csv::stringify_csv_records(outgoing_records, headers)
     say serialized
 
-    # 4. File I/O operations
+    # 4. Strongly-typed Delimiters with CsvDelimiter enum
+    say "\n4. Using CsvDelimiter enum:"
+    let pipe_opts = csv::options_from_delimiter(csv::CsvDelimiter.Pipe)
+    let pipe_data = "alpha|beta|gamma\n100|200|300"
+    let pipe_rows = csv::parse(pipe_data, pipe_opts)
+    say "  Parsed pipe row 1 col 1: " + str_from_ptr(pipe_rows[1][1])
+
+    # 5. File I/O operations
     let demo_file = "./target_demo.csv"
-    say "\n4. Writing records to file: " + demo_file
+    say "\n5. Writing records to file: " + demo_file
     csv::write_file_records(demo_file, outgoing_records, headers)
 
     say "   Reading records back from file:"

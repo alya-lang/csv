@@ -2,7 +2,6 @@
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
 import "std/test"
-import "std/fs"
 import "../src/lib.alya" as csv
 
 function main()
@@ -165,6 +164,37 @@ function main()
 
     # Clean up test file
     remove_file(tmp_path)
+
+    # ═══════════════════════════════════════════════════════════════
+    # 13. Enums and Strongly-Typed Options
+    # ═══════════════════════════════════════════════════════════════
+
+    runner_assert_str_eq(r, csv::delimiter_to_str(csv::CsvDelimiter.Comma), ",", "Delimiter Comma is ','")
+    runner_assert_str_eq(r, csv::delimiter_to_str(csv::CsvDelimiter.Tab), "\t", "Delimiter Tab is '\\t'")
+    runner_assert_str_eq(r, csv::delimiter_to_str(csv::CsvDelimiter.Semicolon), ";", "Delimiter Semicolon is ';'")
+    runner_assert_str_eq(r, csv::delimiter_to_str(csv::CsvDelimiter.Pipe), "|", "Delimiter Pipe is '|'")
+    runner_assert_str_eq(r, csv::delimiter_to_str(csv::CsvDelimiter.Colon), ":", "Delimiter Colon is ':'")
+
+    let colon_opts = csv::options_from_delimiter(csv::CsvDelimiter.Colon)
+    let colon_data = "user:uid:gid\nroot:0:0\nalya:1000:1000"
+    let colon_rows = csv::parse(colon_data, colon_opts)
+    runner_assert_eq(r, len(colon_rows), 3, "Parsed 3 colon-delimited rows")
+    runner_assert_str_eq(r, colon_rows[1][0], "root", "Colon col 0 is root")
+    runner_assert_str_eq(r, colon_rows[2][1], "1000", "Colon col 1 is 1000")
+
+    let q_opts = csv::options_with_quote_mode(csv::QuoteMode.All)
+    let q_rows = [["a", "b"], ["1", "2"]]
+    let q_str = csv::stringify(q_rows, q_opts)
+    runner_assert_str_eq(r, q_str, "\"a\",\"b\"\n\"1\",\"2\"", "QuoteMode.All quotes all fields")
+
+    let nl_opts = csv::options_with_newline(csv::NewlineMode.Crlf)
+    let nl_str = csv::stringify([["x"], ["y"]], nl_opts)
+    runner_assert_str_eq(r, nl_str, "x\r\ny", "NewlineMode.Crlf produces CRLF")
+
+    let tr_opts = csv::options_with_trim(csv::TrimMode.Whitespace)
+    let tr_rows = csv::parse(" foo , bar \n baz , qux ", tr_opts)
+    runner_assert_str_eq(r, tr_rows[0][0], "foo", "TrimMode.Whitespace trims field 0")
+    runner_assert_str_eq(r, tr_rows[0][1], "bar", "TrimMode.Whitespace trims field 1")
 
     let failed = runner_summary(r)
     if failed > 0

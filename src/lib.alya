@@ -1,5 +1,10 @@
-# csv - RFC-4180 Compliant CSV & TSV Library for Alya
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # csv
+##
+## RFC-4180 Compliant CSV & TSV Library for Alya.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Provides high-performance CSV and TSV parsing, serialization, record mapping,
+## strongly-typed delimiter and quoting enums, and convenient file I/O operations.
 
 import "./types.alya"
 import "./core/parser.alya"
@@ -7,18 +12,21 @@ import "./core/writer.alya"
 import "./io/file.alya"
 
 # ═══════════════════════════════════════════════════════════════
-# Options Constructors
+# Options & Configuration Constructors
 # ═══════════════════════════════════════════════════════════════
 
-pub function options()
+## Creates a default CsvOptions instance configured for standard RFC-4180 CSV.
+pub function options() -> CsvOptions
     return options_new()
 end
 
-pub function tsv_options()
+## Creates a CsvOptions instance configured for Tab-Separated Values (TSV).
+pub function tsv_options() -> CsvOptions
     return options_tsv()
 end
 
-pub function custom_options(delimiter)
+## Creates a CsvOptions instance with a custom delimiter character string.
+pub function custom_options(delimiter: string) -> CsvOptions
     return options_with_delimiter(delimiter)
 end
 
@@ -26,12 +34,26 @@ end
 # Parsing API
 # ═══════════════════════════════════════════════════════════════
 
-# Parse CSV string into a 2D list of rows.
+## Parses CSV/TSV text into a 2D array of string rows.
+##
+## ### Parameters
+## - `text`: Raw input string.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## 2D array of string fields.
 pub function parse_csv(text, opts = null)
     return parse(text, opts)
 end
 
-# Parse TSV string into a 2D list of rows.
+## Parses TSV (Tab-Separated Values) text into a 2D array of string rows.
+##
+## ### Parameters
+## - `text`: Raw TSV input string.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## 2D array of string fields.
 pub function parse_tsv(text, opts = null)
     let options = opts
     if options is null
@@ -42,12 +64,26 @@ pub function parse_tsv(text, opts = null)
     return parse(text, options)
 end
 
-# Parse CSV string into a list of Map records using the first row as headers.
+## Parses CSV text into an array of Map records using the first row as column header names.
+##
+## ### Parameters
+## - `text`: Raw input string containing header and data rows.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Array of map records.
 pub function parse_csv_records(text, opts = null)
     return parse_records(text, opts)
 end
 
-# Parse TSV string into a list of Map records using the first row as headers.
+## Parses TSV text into an array of Map records using the first row as column header names.
+##
+## ### Parameters
+## - `text`: Raw TSV input string containing header and data rows.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Array of map records.
 pub function parse_tsv_records(text, opts = null)
     let options = opts
     if options is null
@@ -62,13 +98,27 @@ end
 # Serialization API
 # ═══════════════════════════════════════════════════════════════
 
-# Serialize 2D list of rows to CSV string.
-pub function stringify_csv(rows, opts = null)
+## Serializes a 2D array of rows into an RFC-4180 CSV string.
+##
+## ### Parameters
+## - `rows`: 2D array of rows and cell values.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Serialized CSV string.
+pub function stringify_csv(rows, opts = null) -> string
     return stringify(rows, opts)
 end
 
-# Serialize 2D list of rows to TSV string.
-pub function stringify_tsv(rows, opts = null)
+## Serializes a 2D array of rows into a Tab-Separated Values (TSV) string.
+##
+## ### Parameters
+## - `rows`: 2D array of rows and cell values.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Serialized TSV string.
+pub function stringify_tsv(rows, opts = null) -> string
     let options = opts
     if options is null
         options = options_tsv()
@@ -78,13 +128,29 @@ pub function stringify_tsv(rows, opts = null)
     return stringify(rows, options)
 end
 
-# Serialize list of Map records to CSV string with headers.
-pub function stringify_csv_records(records, headers = null, opts = null)
+## Serializes an array of Map records into an RFC-4180 CSV string with a header line.
+##
+## ### Parameters
+## - `records`: Array of map records.
+## - `headers`: Optional array of column header names.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Serialized CSV string.
+pub function stringify_csv_records(records, headers = null, opts = null) -> string
     return stringify_records(records, headers, opts)
 end
 
-# Serialize list of Map records to TSV string with headers.
-pub function stringify_tsv_records(records, headers = null, opts = null)
+## Serializes an array of Map records into a TSV string with a header line.
+##
+## ### Parameters
+## - `records`: Array of map records.
+## - `headers`: Optional array of column header names.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Serialized TSV string.
+pub function stringify_tsv_records(records, headers = null, opts = null) -> string
     let options = opts
     if options is null
         options = options_tsv()
@@ -98,18 +164,53 @@ end
 # File I/O API
 # ═══════════════════════════════════════════════════════════════
 
-pub function read_file_rows(path, opts = null)
+## Reads a CSV file and parses its contents into a 2D array of rows.
+##
+## ### Parameters
+## - `path`: File system path to the CSV file.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## 2D array of string fields.
+pub function read_file_rows(path: string, opts = null)
     return read_csv_file(path, opts)
 end
 
-pub function read_file_records(path, opts = null)
+## Reads a CSV file and parses its contents into an array of Map records.
+##
+## ### Parameters
+## - `path`: File system path to the CSV file.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Array of map records.
+pub function read_file_records(path: string, opts = null)
     return read_records_file(path, opts)
 end
 
-pub function write_file_rows(path, rows, opts = null)
+## Serializes a 2D array of rows and writes them to a CSV file.
+##
+## ### Parameters
+## - `path`: Destination file path.
+## - `rows`: 2D array of rows and cell values.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Integer write status code.
+pub function write_file_rows(path: string, rows, opts = null)
     return write_csv_file(path, rows, opts)
 end
 
-pub function write_file_records(path, records, headers = null, opts = null)
+## Serializes an array of Map records and writes them to a CSV file with a header row.
+##
+## ### Parameters
+## - `path`: Destination file path.
+## - `records`: Array of map records.
+## - `headers`: Optional array of column header names.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Integer write status code.
+pub function write_file_records(path: string, records, headers = null, opts = null)
     return write_records_file(path, records, headers, opts)
 end

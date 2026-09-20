@@ -1,26 +1,62 @@
-# file.alya - CSV File I/O Operations
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # csv/io/file
+##
+## File system I/O utilities for reading and writing CSV and TSV files.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
 
-import "../types.alya"
 import "../core/parser.alya"
 import "../core/writer.alya"
 
-function read_csv_file(path, opts = null)
+## Reads a CSV or TSV file and parses its contents into a 2D array of rows.
+##
+## ### Parameters
+## - `path`: File system path to the CSV/TSV file.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## 2D array of string fields.
+pub function read_csv_file(path: string, opts = null)
     let content = read_file(path)
     return parse(content, opts)
 end
 
-function read_records_file(path, opts = null)
+## Reads a CSV or TSV file and parses its contents into an array of Map records.
+##
+## ### Parameters
+## - `path`: File system path to the CSV/TSV file.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Array of map records.
+pub function read_records_file(path: string, opts = null)
     let content = read_file(path)
     return parse_records(content, opts)
 end
 
-function write_csv_file(path, rows, opts = null)
+## Serializes a 2D array of rows and writes them to a CSV or TSV file.
+##
+## ### Parameters
+## - `path`: Destination file path.
+## - `rows`: 2D array of rows and column cell values.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Integer result from file write operation.
+pub function write_csv_file(path: string, rows, opts = null)
     let content = stringify(rows, opts)
     return write_file(path, content)
 end
 
-function write_records_file(path, records, headers = null, opts = null)
+## Serializes an array of Map records and writes them to a CSV or TSV file with a header.
+##
+## ### Parameters
+## - `path`: Destination file path.
+## - `records`: Array of map records.
+## - `headers`: Optional array of column header names.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Integer result from file write operation.
+pub function write_records_file(path: string, records, headers = null, opts = null)
     let content = stringify_records(records, headers, opts)
     return write_file(path, content)
 end

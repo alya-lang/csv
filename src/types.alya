@@ -1,18 +1,92 @@
-# Types and data structures for csv
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # csv/types
+##
+## Types, enums, and configuration options for CSV and TSV processing.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Defines standard delimiters, quote strategies, newline types, and CsvOptions configuration.
 
-pub struct CsvOptions
-    delimiter
-    quote_char
-    escape_char
-    trim
-    skip_empty_lines
-    comment_char
-    crlf
-    always_quote
+## Enumeration of standard CSV and TSV delimiters.
+pub enum CsvDelimiter
+    Comma = 1,
+    Tab = 2,
+    Semicolon = 3,
+    Pipe = 4,
+    Colon = 5
 end
 
-pub function options_new()
+## Enumeration of quoting strategies for CSV field serialization.
+pub enum QuoteMode
+    Minimal = 1,
+    All = 2,
+    NonNumeric = 3,
+    Never = 4
+end
+
+## Enumeration of whitespace trimming options during parsing.
+pub enum TrimMode
+    None = 0,
+    Whitespace = 1
+end
+
+## Enumeration of line termination formats for CSV serialization.
+pub enum NewlineMode
+    Lf = 1,
+    Crlf = 2
+end
+
+## Configuration options for parsing and serializing CSV/TSV data.
+##
+## ### Fields
+## - `delimiter`: Field delimiter character (default `","`).
+## - `quote_char`: Character used for quoting fields (default `"\""`).
+## - `escape_char`: Character used to escape quote marks (default `"\""`).
+## - `trim`: `1` to trim leading/trailing whitespace from unquoted fields, `0` otherwise.
+## - `skip_empty_lines`: `1` to skip empty lines, `0` to keep them.
+## - `comment_char`: Prefix character for comment lines, or empty string.
+## - `crlf`: `1` for CRLF (`\r\n`) line endings, `0` for LF (`\n`).
+## - `always_quote`: `1` to wrap every field in quotes, `0` for minimal quoting.
+## - `quote_mode`: Active `QuoteMode` value (default `1` for Minimal).
+pub struct CsvOptions
+    delimiter: string,
+    quote_char: string,
+    escape_char: string,
+    trim: int,
+    skip_empty_lines: int,
+    comment_char: string,
+    crlf: int,
+    always_quote: int,
+    quote_mode: int
+end
+
+## Converts a CsvDelimiter enum variant to its corresponding delimiter string character.
+##
+## ### Parameters
+## - `delim`: Target `CsvDelimiter` enum variant.
+##
+## ### Returns
+## String containing the delimiter character.
+pub function delimiter_to_str(delim: CsvDelimiter) -> string
+    when delim
+        is CsvDelimiter.Comma then
+            return ","
+        is CsvDelimiter.Tab then
+            return "\t"
+        is CsvDelimiter.Semicolon then
+            return ";"
+        is CsvDelimiter.Pipe then
+            return "|"
+        is CsvDelimiter.Colon then
+            return ":"
+        else
+            return ","
+    end
+end
+
+## Creates a default CsvOptions instance configured for standard RFC-4180 CSV.
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance.
+pub function options_new() -> CsvOptions
     return CsvOptions {
         delimiter: ",",
         quote_char: "\"",
@@ -21,18 +95,89 @@ pub function options_new()
         skip_empty_lines: 1,
         comment_char: "",
         crlf: 0,
-        always_quote: 0
+        always_quote: 0,
+        quote_mode: 1
     }
 end
 
-pub function options_tsv()
+## Creates a CsvOptions instance configured for Tab-Separated Values (TSV).
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance with delimiter set to `"\t"`.
+pub function options_tsv() -> CsvOptions
     let opts = options_new()
     opts.delimiter = "\t"
     return opts
 end
 
-pub function options_with_delimiter(delim)
+## Creates a CsvOptions instance with a custom delimiter string.
+##
+## ### Parameters
+## - `delim`: Custom delimiter character string (e.g. `";"` or `"|"`).
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance.
+pub function options_with_delimiter(delim: string) -> CsvOptions
     let opts = options_new()
     opts.delimiter = delim
+    return opts
+end
+
+## Creates a CsvOptions instance configured from a CsvDelimiter enum variant.
+##
+## ### Parameters
+## - `delim`: `CsvDelimiter` variant.
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance.
+pub function options_from_delimiter(delim: CsvDelimiter) -> CsvOptions
+    let opts = options_new()
+    opts.delimiter = delimiter_to_str(delim)
+    return opts
+end
+
+## Creates a CsvOptions instance configured with a QuoteMode enum variant.
+##
+## ### Parameters
+## - `mode`: `QuoteMode` variant.
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance.
+pub function options_with_quote_mode(mode: QuoteMode) -> CsvOptions
+    let opts = options_new()
+    opts.quote_mode = mode as int
+    if mode == QuoteMode.All
+        opts.always_quote = 1
+    end
+    return opts
+end
+
+## Creates a CsvOptions instance configured with a NewlineMode enum variant.
+##
+## ### Parameters
+## - `newline_mode`: `NewlineMode` variant.
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance.
+pub function options_with_newline(newline_mode: NewlineMode) -> CsvOptions
+    let opts = options_new()
+    if newline_mode == NewlineMode.Crlf
+        opts.crlf = 1
+    else
+        opts.crlf = 0
+    end
+    return opts
+end
+
+## Creates a CsvOptions instance configured with a TrimMode enum variant.
+##
+## ### Parameters
+## - `trim_mode`: `TrimMode` variant.
+##
+## ### Returns
+## Initialized `CsvOptions` struct instance.
+pub function options_with_trim(trim_mode: TrimMode) -> CsvOptions
+    let opts = options_new()
+    opts.trim = trim_mode as int
     return opts
 end

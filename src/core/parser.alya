@@ -1,10 +1,21 @@
-# parser.alya - RFC-4180 Compliant CSV / TSV Parser for Alya
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # csv/core/parser
+##
+## RFC-4180 compliant CSV and TSV tokenizer and parser.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Supports quoted fields, escaped quotes, embedded newlines, custom delimiters,
+## comment lines, and leading/trailing whitespace trimming.
 
 import "../types.alya"
 
-# Internal trim helper
-function _csv_trim(s)
+## Trims leading and trailing whitespace and line breaks from a string.
+##
+## ### Parameters
+## - `s`: Input string to trim.
+##
+## ### Returns
+## Trimmed string slice.
+pub function _csv_trim(s: string) -> string
     let slen = len(s)
     if slen == 0
         return ""
@@ -31,8 +42,15 @@ function _csv_trim(s)
     return substring(s, start, end_pos - start + 1)
 end
 
-# Parses CSV text into a 2D array of string fields (rows).
-function parse(text, opts = null)
+## Parses raw CSV or TSV text into a 2D array of string rows.
+##
+## ### Parameters
+## - `text`: Raw input string.
+## - `opts`: Optional `CsvOptions` configuration. If `null`, defaults to standard RFC-4180.
+##
+## ### Returns
+## 2D array of row fields `[[col0, col1], ...]`.
+pub function parse(text, opts = null)
     let options = opts
     if options is null
         options = options_new()
@@ -97,41 +115,28 @@ function parse(text, opts = null)
                 current_field = ""
                 field_was_quoted = 0
                 at_line_start = 0
-            elif ch == "\r"
-                if i + 1 < slen and char_at(s, i + 1) == "\n"
-                    i += 1
-                end
-                if should_trim == 1 and field_was_quoted == 0
-                    current_field = _csv_trim(current_field)
-                end
-                current_row.push(current_field)
-                current_field = ""
-                field_was_quoted = 0
-
-                # Determine if row should be pushed
-                let row_len = len(current_row)
-                if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
-                    rows.push(current_row)
-                end
-                current_row = []
-                at_line_start = 1
-            elif ch == "\n"
-                if should_trim == 1 and field_was_quoted == 0
-                    current_field = _csv_trim(current_field)
-                end
-                current_row.push(current_field)
-                current_field = ""
-                field_was_quoted = 0
-
-                let row_len = len(current_row)
-                if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
-                    rows.push(current_row)
-                end
-                current_row = []
-                at_line_start = 1
             else
-                current_field += ch
-                at_line_start = 0
+                if ch == "\r" or ch == "\n"
+                    if ch == "\r" and i + 1 < slen and char_at(s, i + 1) == "\n"
+                        i += 1
+                    end
+                    if should_trim == 1 and field_was_quoted == 0
+                        current_field = _csv_trim(current_field)
+                    end
+                    current_row.push(current_field)
+                    current_field = ""
+                    field_was_quoted = 0
+
+                    let row_len = len(current_row)
+                    if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
+                        rows.push(current_row)
+                    end
+                    current_row = []
+                    at_line_start = 1
+                else
+                    current_field += ch
+                    at_line_start = 0
+                end
             end
         end
 
@@ -153,8 +158,15 @@ function parse(text, opts = null)
     return rows
 end
 
-# Parses CSV text into an array of Map records based on header column names.
-function parse_records(text, opts = null)
+## Parses CSV text into an array of Map records using the first row as column headers.
+##
+## ### Parameters
+## - `text`: Raw input string containing header and data rows.
+## - `opts`: Optional `CsvOptions` configuration.
+##
+## ### Returns
+## Array of map records `[{"header": "val"}, ...]`.
+pub function parse_records(text, opts = null)
     let rows = parse(text, opts)
     let num_rows = len(rows)
     if num_rows == 0
