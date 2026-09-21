@@ -11,3 +11,7 @@ repository = "https://github.com/alya-lang/csv"
 keywords = ["alya", "alya-lang", "package", "csv", "tsv"]
 
 [dependencies]
+
+# [lint]
+# disabled_rules = []
+# exclude = []
