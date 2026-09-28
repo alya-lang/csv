@@ -9,6 +9,7 @@
 import "./types.alya"
 import "./core/parser.alya"
 import "./core/writer.alya"
+@cfg(feature = "io")
 import "./io/file.alya"
 
 # ═══════════════════════════════════════════════════════════════
@@ -166,17 +167,22 @@ end
 
 ## Reads a CSV file and parses its contents into a 2D array of rows.
 ##
+## Requires the `io` feature (default-on).
+##
 ## ### Parameters
 ## - `path`: File system path to the CSV file.
 ## - `opts`: Optional `CsvOptions` configuration.
 ##
 ## ### Returns
 ## 2D array of string fields.
+@cfg(feature = "io")
 pub function read_file_rows(path: string, opts = null)
     return read_csv_file(path, opts)
 end
 
 ## Reads a CSV file and parses its contents into an array of Map records.
+##
+## Requires the `io` feature (default-on).
 ##
 ## ### Parameters
 ## - `path`: File system path to the CSV file.
@@ -184,11 +190,14 @@ end
 ##
 ## ### Returns
 ## Array of map records.
+@cfg(feature = "io")
 pub function read_file_records(path: string, opts = null)
     return read_records_file(path, opts)
 end
 
 ## Serializes a 2D array of rows and writes them to a CSV file.
+##
+## Requires the `io` feature (default-on).
 ##
 ## ### Parameters
 ## - `path`: Destination file path.
@@ -197,11 +206,14 @@ end
 ##
 ## ### Returns
 ## Integer write status code.
+@cfg(feature = "io")
 pub function write_file_rows(path: string, rows, opts = null)
     return write_csv_file(path, rows, opts)
 end
 
 ## Serializes an array of Map records and writes them to a CSV file with a header row.
+##
+## Requires the `io` feature (default-on).
 ##
 ## ### Parameters
 ## - `path`: Destination file path.
@@ -211,6 +223,7 @@ end
 ##
 ## ### Returns
 ## Integer write status code.
+@cfg(feature = "io")
 pub function write_file_records(path: string, records, headers = null, opts = null)
     return write_records_file(path, records, headers, opts)
 end

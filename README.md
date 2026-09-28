@@ -58,6 +58,22 @@ alya add csv --git https://github.com/alya-lang/csv --branch main
 alya install
 ```
 
+### Package Features
+
+| Feature | Default | Description |
+|:---|:---:|:---|
+| `io` | ✅ | File I/O (`read_file_rows`/`read_file_records`/`write_file_rows`/`write_file_records`). Without it only in-memory parse/stringify remain. |
+
+```bash
+# Full build (default)
+alya install
+alya test
+
+# Slim build without file I/O
+alya install --no-default-features
+alya test --no-default-features
+```
+
 ---
 
 ## 🚀 Quick Start

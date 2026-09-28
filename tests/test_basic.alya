@@ -150,19 +150,27 @@ function main()
     # 12. File Operations
     # ═══════════════════════════════════════════════════════════════
 
+    @cfg(feature = "io")
     let tmp_path = "./target_test_output.csv"
+    @cfg(feature = "io")
     let file_data = [
         ["city", "country"],
         ["Tokyo", "Japan"],
         ["Berlin", "Germany"]
     ]
+    @cfg(feature = "io")
     csv::write_file_rows(tmp_path, file_data)
+    @cfg(feature = "io")
     let read_back = csv::read_file_rows(tmp_path)
+    @cfg(feature = "io")
     runner_assert_eq(r, len(read_back), 3, "File read matches written row count")
+    @cfg(feature = "io")
     runner_assert_str_eq(r, read_back[1][0], "Tokyo", "File read col 0 matches")
+    @cfg(feature = "io")
     runner_assert_str_eq(r, read_back[2][1], "Germany", "File read col 1 matches")
 
     # Clean up test file
+    @cfg(feature = "io")
     remove_file(tmp_path)
 
     # ═══════════════════════════════════════════════════════════════

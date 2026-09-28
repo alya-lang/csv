@@ -46,11 +46,15 @@ function main()
     # 5. File I/O operations
     let demo_file = "./target_demo.csv"
     say "\n5. Writing records to file: " + demo_file
+    @cfg(feature = "io")
     csv::write_file_records(demo_file, outgoing_records, headers)
 
     say "   Reading records back from file:"
+    @cfg(feature = "io")
     let read_records = csv::read_file_records(demo_file)
+    @cfg(feature = "io")
     let k = 0
+    @cfg(feature = "io")
     while k < len(read_records)
         let rec = read_records[k]
         say "   - " + str_from_ptr(rec["name"]) + " (" + str_from_ptr(rec["role"]) + ")"
@@ -58,6 +62,7 @@ function main()
     end
 
     # Clean up demo file
+    @cfg(feature = "io")
     remove_file(demo_file)
     say "\nDemo finished successfully!"
 end
