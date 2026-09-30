@@ -12,10 +12,6 @@ keywords = ["alya", "alya-lang", "package", "csv", "tsv"]
 
 [dependencies]
 
-[features]
-default = ["io"]
-io = []
-
 # [lint]
 # disabled_rules = []
 # exclude = []
@@ -28,3 +24,7 @@ io = []
 
 # [bench]
 # exclude = []
+
+[features]
+default = ["io"]
+io = []
