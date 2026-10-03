@@ -48,16 +48,16 @@ pub function format_field(val, opts) -> string
 
     let needs_quotes = always
     if quote_mode == 2
-        needs_quotes = 1
+        needs_quotes = true
     else
-        if quote_mode != 4 and needs_quotes == 0
+        if quote_mode != 4 and needs_quotes == false
             if contains(s, delim) or contains(s, quote) or contains(s, "\n") or contains(s, "\r")
-                needs_quotes = 1
+                needs_quotes = true
             end
         end
     end
 
-    if needs_quotes == 1
+    if needs_quotes == true
         let escaped = _csv_escape_quotes(s, quote)
         return quote + escaped + quote
     end
@@ -81,7 +81,7 @@ pub function stringify(rows, opts = null) -> string
 
     let delim = options.delimiter
     let line_ending = "\n"
-    if options.crlf == 1
+    if options.crlf == true
         line_ending = "\r\n"
     end
 
@@ -153,7 +153,7 @@ pub function stringify_records(records, headers = null, opts = null) -> string
         while c < h_count
             let h = str_from_ptr(actual_headers[c])
             let val = ""
-            if has(rec, h) == 1
+            if has(rec, h) == true
                 val = str_from_ptr(get(rec, h))
             end
             row.push(val)

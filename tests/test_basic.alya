@@ -96,7 +96,7 @@ function main()
 
     let comment_opts = csv::options()
     comment_opts.comment_char = "#"
-    comment_opts.trim = 1
+    comment_opts.trim = true
     let comment_csv = "# This is a comment\n  name  ,  age  \n# Another comment\n  Bob  ,  40  "
     let c_rows = csv::parse_csv(comment_csv, comment_opts)
     runner_assert_eq(r, len(c_rows), 2, "Comments skipped properly")

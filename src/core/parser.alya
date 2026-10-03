@@ -68,74 +68,74 @@ pub function parse(text, opts = null)
     let rows = []
     let current_row = []
     let current_field = ""
-    let in_quotes = 0
-    let field_was_quoted = 0
-    let at_line_start = 1
-    let in_comment = 0
+    let in_quotes = false
+    let field_was_quoted = false
+    let at_line_start = true
+    let in_comment = false
     let i = 0
 
     while i < slen
         let ch = char_at(s, i)
 
         # Handle comment lines if configured
-        if at_line_start == 1 and len(comment) > 0 and ch == comment
-            in_comment = 1
+        if at_line_start == true and len(comment) > 0 and ch == comment
+            in_comment = true
         end
 
-        if in_comment == 1
+        if in_comment == true
             if ch == "\n"
-                in_comment = 0
-                at_line_start = 1
+                in_comment = false
+                at_line_start = true
             end
             i += 1
             continue
         end
 
-        if in_quotes == 1
+        if in_quotes == true
             if ch == quote
                 # Check for escaped quote (e.g. "" in RFC 4180)
                 if i + 1 < slen and char_at(s, i + 1) == escape
                     current_field += quote
                     i += 1
                 else
-                    in_quotes = 0
+                    in_quotes = false
                 end
             else
                 current_field += ch
             end
         else
             if ch == quote and len(current_field) == 0
-                in_quotes = 1
-                field_was_quoted = 1
+                in_quotes = true
+                field_was_quoted = true
             elif ch == delim
-                if should_trim == 1 and field_was_quoted == 0
+                if should_trim == true and field_was_quoted == false
                     current_field = _csv_trim(current_field)
                 end
                 current_row.push(current_field)
                 current_field = ""
-                field_was_quoted = 0
-                at_line_start = 0
+                field_was_quoted = false
+                at_line_start = false
             else
                 if ch == "\r" or ch == "\n"
                     if ch == "\r" and i + 1 < slen and char_at(s, i + 1) == "\n"
                         i += 1
                     end
-                    if should_trim == 1 and field_was_quoted == 0
+                    if should_trim == true and field_was_quoted == false
                         current_field = _csv_trim(current_field)
                     end
                     current_row.push(current_field)
                     current_field = ""
-                    field_was_quoted = 0
+                    field_was_quoted = false
 
                     let row_len = len(current_row)
-                    if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
+                    if skip_empty == false or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
                         rows.push(current_row)
                     end
                     current_row = []
-                    at_line_start = 1
+                    at_line_start = true
                 else
                     current_field += ch
-                    at_line_start = 0
+                    at_line_start = false
                 end
             end
         end
@@ -144,13 +144,13 @@ pub function parse(text, opts = null)
     end
 
     # Flush last remaining field and row
-    if len(current_field) > 0 or len(current_row) > 0 or field_was_quoted == 1
-        if should_trim == 1 and field_was_quoted == 0
+    if len(current_field) > 0 or len(current_row) > 0 or field_was_quoted == true
+        if should_trim == true and field_was_quoted == false
             current_field = _csv_trim(current_field)
         end
         current_row.push(current_field)
         let row_len = len(current_row)
-        if skip_empty == 0 or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
+        if skip_empty == false or row_len > 1 or (row_len == 1 and len(current_row[0]) > 0)
             rows.push(current_row)
         end
     end

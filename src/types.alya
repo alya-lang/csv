@@ -91,11 +91,11 @@ pub function options_new() -> CsvOptions
         delimiter: ",",
         quote_char: "\"",
         escape_char: "\"",
-        trim: 0,
-        skip_empty_lines: 1,
+        trim: false,
+        skip_empty_lines: true,
         comment_char: "",
-        crlf: 0,
-        always_quote: 0,
+        crlf: false,
+        always_quote: false,
         quote_mode: 1
     }
 end
@@ -147,7 +147,7 @@ pub function options_with_quote_mode(mode: QuoteMode) -> CsvOptions
     let opts = options_new()
     opts.quote_mode = mode as int
     if mode == QuoteMode.All
-        opts.always_quote = 1
+        opts.always_quote = true
     end
     return opts
 end
@@ -162,9 +162,9 @@ end
 pub function options_with_newline(newline_mode: NewlineMode) -> CsvOptions
     let opts = options_new()
     if newline_mode == NewlineMode.Crlf
-        opts.crlf = 1
+        opts.crlf = true
     else
-        opts.crlf = 0
+        opts.crlf = false
     end
     return opts
 end
